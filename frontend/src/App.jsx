@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
@@ -8,7 +8,7 @@ import LoginModal from './pages/LoginModal';
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <AppProvider>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -19,7 +19,7 @@ function App() {
         </Routes>
         <LoginModal />
       </AppProvider>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 

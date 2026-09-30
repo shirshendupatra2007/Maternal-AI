@@ -1,5 +1,8 @@
 # 🌸 Maternal-AI — 3D Maternal Companion & Upgraded Health Dashboard
 
+> ## 🚀 **[✨ CLICK HERE TO OPEN THE LIVE 3D WEBSITE ✨](https://shirshendupatra2007.github.io/Maternal-AI/)**
+> **Direct Live Link:** [https://shirshendupatra2007.github.io/Maternal-AI/](https://shirshendupatra2007.github.io/Maternal-AI/)
+
 An ultra-modern, empathetic, full-stack 3D maternal health companion and pregnancy management suite built with **React 19, Three.js WebGL, Node.js, Express, and Google Gemini AI**.
 
 ---
