@@ -1,19 +1,17 @@
 @echo off
-title Push MamaAI to GitHub
+title Push Maternal-AI to GitHub
 color 0B
 echo ========================================================
-echo        Pushing MamaAI to GitHub Repository
+echo        Pushing Maternal-AI to GitHub Repository
 echo ========================================================
-echo Target: https://github.com/shirshendupatra2007/Pregnency-Health-Tracking
-echo.
-echo If a browser window opens, please click "Authorize" or sign in to GitHub.
+echo Target: https://github.com/shirshendupatra2007/Maternal-AI
 echo.
 git push -u origin main
 echo.
 if %ERRORLEVEL% EQU 0 (
     echo ========================================================
-    echo  SUCCESS! Your code has been pushed to GitHub!
-    echo  Visit: https://github.com/shirshendupatra2007/Pregnency-Health-Tracking
+    echo  SUCCESS! Your upgraded 3D website has been pushed to GitHub!
+    echo  Visit: https://github.com/shirshendupatra2007/Maternal-AI
     echo ========================================================
 ) else (
     echo.
