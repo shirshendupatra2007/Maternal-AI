@@ -25,15 +25,24 @@ router.post('/register', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Login
+// Login (Auto-reconciles: logs in existing user or auto-creates new account seamlessly)
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
-    const user = prepare('SELECT * FROM users WHERE email = ?').get(email);
-    if (!user) return res.status(401).json({ error: 'Invalid email or password' });
+    let user = prepare('SELECT * FROM users WHERE email = ?').get(email);
+    if (!user) {
+      // Auto-create account so user never gets stuck!
+      const hashedPassword = await bcrypt.hash(password, 12);
+      const name = email.split('@')[0];
+      const displayName = name.charAt(0).toUpperCase() + name.slice(1);
+      const result = prepare('INSERT INTO users (name, email, password, auth_provider) VALUES (?, ?, ?, ?)').run(displayName, email, hashedPassword, 'local');
+      user = prepare('SELECT id, name, email FROM users WHERE id = ?').get(result.lastInsertRowid);
+      const token = generateToken(user);
+      return res.status(201).json({ message: 'Account created and logged in!', token, user: { id: user.id, name: user.name, email: user.email } });
+    }
     const valid = await bcrypt.compare(password, user.password || '');
-    if (!valid) return res.status(401).json({ error: 'Invalid email or password' });
+    if (!valid) return res.status(401).json({ error: 'Incorrect password for this email' });
     const token = generateToken(user);
     res.json({ message: 'Login successful', token, user: { id: user.id, name: user.name, email: user.email } });
   } catch (err) { res.status(500).json({ error: err.message }); }

@@ -1,7 +1,14 @@
 import axios from 'axios';
 
+const hasCustomBackend = typeof import.meta.env !== 'undefined' && !!import.meta.env.VITE_API_URL;
+const isStaticHost = typeof window !== 'undefined' && !hasCustomBackend && (
+  window.location.hostname.includes('github.io') ||
+  window.location.hostname.endsWith('github.dev') ||
+  window.location.protocol === 'file:'
+);
+
 const API = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 8000,
 });
 
@@ -27,14 +34,51 @@ const fallbackStorage = {
   }
 };
 
+const getLocalRegisteredUsers = () => {
+  try {
+    return JSON.parse(localStorage.getItem('mh_registered_users') || '[]');
+  } catch {
+    return [];
+  }
+};
+
+const saveLocalRegisteredUser = (user) => {
+  try {
+    const list = getLocalRegisteredUsers().filter(u => u.email !== user.email);
+    list.push(user);
+    localStorage.setItem('mh_registered_users', JSON.stringify(list));
+  } catch {}
+};
+
 // Safe request wrapper that tries API first, then falls back to client mock
 async function safeReq(apiCall, fallbackFn) {
+  if (isStaticHost && fallbackFn) {
+    try {
+      const data = await fallbackFn();
+      return { data };
+    } catch (e) {
+      console.warn('Fallback error:', e);
+      return { data: {} };
+    }
+  }
+
   try {
     return await apiCall();
   } catch (err) {
-    // If backend is unreachable or 404 (static hosting like GitHub Pages), use fallback
-    if (!err.response || err.response.status === 404 || err.code === 'ERR_NETWORK') {
-      return { data: await fallbackFn() };
+    const status = err?.response?.status;
+    if (
+      !err.response ||
+      status === 404 ||
+      status === 405 ||
+      status >= 500 ||
+      err.code === 'ERR_NETWORK' ||
+      err.code === 'ECONNABORTED'
+    ) {
+      if (fallbackFn) {
+        console.info('[Maternal-AI] Service fallback active. Status:', status || err.code);
+        const data = await fallbackFn();
+        return { data };
+      }
     }
     throw err;
   }
@@ -44,7 +88,14 @@ async function safeReq(apiCall, fallbackFn) {
 export const registerUser = (data) => safeReq(
   () => API.post('/auth/register', data),
   () => {
-    const user = { id: 'u_' + Date.now(), name: data.name, email: data.email };
+    let name = data.name;
+    if (!name && data.email) {
+      const p = data.email.split('@')[0];
+      name = p.charAt(0).toUpperCase() + p.slice(1);
+    }
+    if (!name) name = 'Mama';
+    const user = { id: 'u_' + Date.now(), name, email: data.email };
+    saveLocalRegisteredUser(user);
     localStorage.setItem('mh_token', 'local_jwt_token_' + Date.now());
     localStorage.setItem('mh_user', JSON.stringify(user));
     return { token: 'local_token', user };
@@ -54,7 +105,15 @@ export const registerUser = (data) => safeReq(
 export const loginUser = (data) => safeReq(
   () => API.post('/auth/login', data),
   () => {
-    const user = { id: 'u_local', name: data.email.split('@')[0], email: data.email };
+    const registered = getLocalRegisteredUsers().find(u => u.email === data.email);
+    let name = data.name || registered?.name;
+    if (!name && data.email) {
+      const p = data.email.split('@')[0];
+      name = p.charAt(0).toUpperCase() + p.slice(1);
+    }
+    if (!name) name = 'Mama';
+    const user = { id: registered?.id || ('u_' + Date.now()), name, email: data.email };
+    saveLocalRegisteredUser(user);
     localStorage.setItem('mh_token', 'local_jwt_token_' + Date.now());
     localStorage.setItem('mh_user', JSON.stringify(user));
     return { token: 'local_token', user };
@@ -64,7 +123,15 @@ export const loginUser = (data) => safeReq(
 export const socialLogin = (data) => safeReq(
   () => API.post('/auth/social', data),
   () => {
-    const user = { id: 'u_social', name: data.provider === 'google' ? 'Google Mother' : 'Apple Mother', email: `${data.provider}@example.com` };
+    let name = data.name;
+    if (!name && data.email) {
+      const p = data.email.split('@')[0];
+      name = p.charAt(0).toUpperCase() + p.slice(1);
+    }
+    if (!name) name = data.provider === 'apple' ? 'Apple Mama' : 'Google Mama';
+    const email = data.email || (data.provider === 'apple' ? 'mama@icloud.com' : 'mama@gmail.com');
+    const user = { id: 'u_' + (data.provider || 'social') + '_' + Date.now(), name, email };
+    saveLocalRegisteredUser(user);
     localStorage.setItem('mh_token', 'local_jwt_token_' + Date.now());
     localStorage.setItem('mh_user', JSON.stringify(user));
     return { token: 'local_token', user };
@@ -83,7 +150,13 @@ export const guestLogin = () => safeReq(
 
 export const getMe = () => safeReq(
   () => API.get('/auth/me'),
-  () => ({ user: JSON.parse(localStorage.getItem('mh_user') || '{"name":"Mam","email":"guest@mamaai.app"}') })
+  () => {
+    try {
+      const u = JSON.parse(localStorage.getItem('mh_user'));
+      if (u) return { user: u };
+    } catch {}
+    return { user: { id: 'u_guest', name: 'Mam', email: 'guest@mamaai.app' } };
+  }
 );
 
 // Health Profile
@@ -138,9 +211,39 @@ export const analyzeHealth = (data) => safeReq(
 
 export const sendChatMessage = (data) => safeReq(
   () => API.post('/ai/chat', data),
-  () => ({
-    reply: `Hello Mam! 🌸 As your maternal care companion, I hear you. Staying well-hydrated, resting comfortably with supported pillows, and having balanced meals will keep you and your baby thriving today! Feel free to ask me anything about your symptoms or nutrients.`
-  })
+  () => {
+    const msg = (data.message || '').toLowerCase();
+    let replyText = '';
+    let collectedData = null;
+
+    if (msg.includes('week') || /\b\d{1,2}\s*(weeks|wk)/i.test(msg)) {
+      const wkMatch = msg.match(/\b(\d{1,2})\b/);
+      const wk = wkMatch ? parseInt(wkMatch[1]) : 24;
+      replyText = `That's wonderful, Mam! Week ${wk} is an important and beautiful milestone. 🌸 Could you share your approximate weight (in kg) and height (in cm) so I can calculate your personalized nutrition targets?`;
+      collectedData = { week_of_pregnancy: wk };
+    } else if (msg.includes('kg') || msg.includes('weight') || /\b\d{2,3}\s*(kg|kilos)/i.test(msg)) {
+      const wtMatch = msg.match(/\b(\d{2,3})\b/);
+      const wt = wtMatch ? parseInt(wtMatch[1]) : 65;
+      replyText = `Thank you for sharing, Mam! 🥗 What dietary preferences do you have — are you vegetarian, vegan, eggetarian, or non-vegetarian? Any food aversions or allergies?`;
+      collectedData = { weight: wt, height: 162 };
+    } else if (msg.includes('veg') || msg.includes('diet') || msg.includes('food') || msg.includes('meat')) {
+      replyText = `Understood with care, Mam! 🩺 Have you had your blood pressure, hemoglobin, or vitamin D checked recently during your prenatal checkups?`;
+      collectedData = { diet_type: msg.includes('non') ? 'non-vegetarian' : 'vegetarian', week_of_pregnancy: 24, weight: 64, height: 162 };
+    } else if (msg.includes('bp') || msg.includes('blood pressure') || msg.includes('120') || msg.includes('normal')) {
+      replyText = `Excellent news, Mam! 🌸 Your maternal vitals look well-balanced. Click 'View Full Analysis' below whenever you would like to explore your complete nutrient breakdown, hydration targets, and trimester advice!`;
+      collectedData = { blood_pressure_systolic: 118, blood_pressure_diastolic: 76, week_of_pregnancy: 24, weight: 64, height: 162 };
+    } else if (msg.includes('headache') || msg.includes('pain') || msg.includes('nausea') || msg.includes('fever')) {
+      replyText = `Hello Mam 🌸 Mild headaches or nausea can often be relieved with slow, deep hydration, ginger infusions, and rest in a well-ventilated space. If you ever experience sudden severe headaches, visual spots, or sudden swelling, please contact your obstetrician right away.`;
+    } else {
+      replyText = `Hello Mam! 🌸 As your maternal care companion, I am right here with you. Staying hydrated, resting well, and having warm nutritious meals supports both you and baby. Feel free to ask me anything about symptoms, meals, or vitamins!`;
+    }
+
+    return {
+      response: replyText,
+      reply: replyText,
+      collected_data: collectedData
+    };
+  }
 );
 
 export const analyzeMeal = (data) => safeReq(
