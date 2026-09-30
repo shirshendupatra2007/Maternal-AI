@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import MaternalHeroCanvas from '../components/3d/MaternalHeroCanvas';
+import Card3D from '../components/3d/Card3D';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -88,63 +90,77 @@ export default function HomePage() {
             }</span>! 🌸 How can I help you today?
           </h1>
 
-          <p style={{ fontSize: 'clamp(0.95rem, 3.2vw, 1.1rem)', color: 'var(--text-secondary)', marginBottom: 36, lineHeight: 1.6, maxWidth: 640, margin: '0 auto 36px' }}>
+          <p style={{ fontSize: 'clamp(0.95rem, 3.2vw, 1.1rem)', color: 'var(--text-secondary)', marginBottom: 20, lineHeight: 1.6, maxWidth: 640, margin: '0 auto 20px' }}>
             {isLoggedIn
               ? 'Choose an option below depending upon your mood today — fill a quick structured form or chat with AI like you do with your doctor.'
               : 'Your gentle, caring pregnancy companion. Choose how you would like to share your health details today.'}
           </p>
 
-          {/* Input Options Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 290px), 1fr))', gap: 20, marginBottom: 36 }}>
-            {/* Precise Input Card */}
-            <div
-              className="glass-card"
-              onClick={() => handleOptionClick('/input/precise')}
-              style={{
-                padding: 'clamp(22px, 5vw, 34px)', cursor: 'pointer', textAlign: 'left', position: 'relative', overflow: 'hidden',
-                background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(254, 243, 248, 0.85))'
-              }}
-            >
-              <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle, rgba(155, 114, 207, 0.18) 0%, transparent 70%)' }} />
-              <div style={{ fontSize: '2.4rem', marginBottom: 14 }} className="float-anim">📋</div>
-              <h3 style={{ fontSize: '1.25rem', marginBottom: 8, fontFamily: 'Playfair Display, serif', color: 'var(--text-primary)' }}>Precise Input</h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: 1.55, marginBottom: 18 }}>
-                Fill in structured parameters — weight, pregnancy week, vegetarian/non-vegetarian, food allergies, BP, Vitamin D3, and Iron levels.
-              </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {['Weight', 'Week', 'BP', 'Vitamins', 'Iron'].map(tag => (
-                  <span key={tag} className="tag">{tag}</span>
-                ))}
-              </div>
-              <div style={{ marginTop: 20 }}>
-                <span className="btn-primary" style={{ fontSize: '0.85rem', padding: '9px 18px', width: '100%', justifyContent: 'center' }}>Fill Form →</span>
-              </div>
+          {/* Interactive 3D Maternal Hero Canvas */}
+          <div style={{ marginBottom: 28, position: 'relative' }}>
+            <MaternalHeroCanvas height={220} interactive={true} />
+            <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: -10, letterSpacing: '0.4px' }}>
+              ✨ Move mouse or touch to interact with your 3D maternal environment
             </div>
+          </div>
+
+          {/* Input Options Grid with Realistic 3D Tilt */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 290px), 1fr))', gap: 24, marginBottom: 36 }}>
+            {/* Precise Input Card */}
+            <Card3D maxTilt={10} depth={20} onClick={() => handleOptionClick('/input/precise')}>
+              <div
+                className="glass-card"
+                style={{
+                  padding: 'clamp(22px, 5vw, 34px)', textAlign: 'left', position: 'relative', overflow: 'hidden', height: '100%',
+                  background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(254, 243, 248, 0.9))',
+                  border: '1px solid rgba(232, 99, 154, 0.22)',
+                  boxShadow: '0 12px 32px rgba(155, 114, 207, 0.12)'
+                }}
+              >
+                <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle, rgba(155, 114, 207, 0.18) 0%, transparent 70%)' }} />
+                <div style={{ fontSize: '2.4rem', marginBottom: 14 }} className="float-soft-3d">📋</div>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: 8, fontFamily: 'Playfair Display, serif', color: 'var(--text-primary)' }}>Precise Input</h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: 1.55, marginBottom: 18 }}>
+                  Fill in structured parameters — weight, pregnancy week, vegetarian/non-vegetarian, food allergies, BP, Vitamin D3, and Iron levels.
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {['Weight', 'Week', 'BP', 'Vitamins', 'Iron'].map(tag => (
+                    <span key={tag} className="tag">{tag}</span>
+                  ))}
+                </div>
+                <div style={{ marginTop: 22 }}>
+                  <span className="btn-3d-push btn-primary" style={{ fontSize: '0.85rem', padding: '10px 18px', width: '100%', justifyContent: 'center' }}>Fill Form →</span>
+                </div>
+              </div>
+            </Card3D>
 
             {/* Conversation Card */}
-            <div
-              className="glass-card"
-              onClick={() => handleOptionClick('/input/conversation')}
-              style={{
-                padding: 'clamp(22px, 5vw, 34px)', cursor: 'pointer', textAlign: 'left', position: 'relative', overflow: 'hidden',
-                background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(255, 245, 250, 0.85))'
-              }}
-            >
-              <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle, rgba(232, 99, 154, 0.18) 0%, transparent 70%)' }} />
-              <div style={{ fontSize: '2.4rem', marginBottom: 14 }} className="float-anim">💬</div>
-              <h3 style={{ fontSize: '1.25rem', marginBottom: 8, fontFamily: 'Playfair Display, serif', color: 'var(--text-primary)' }}>Chat with AI Doctor</h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: 1.55, marginBottom: 18 }}>
-                Speak in natural conversation just like visiting your doctor. Share your health details, symptoms, and feelings comfortably.
-              </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {['Friendly Chat', 'Doctor Tone', 'Comfortable'].map(tag => (
-                  <span key={tag} className="tag" style={{ background: 'rgba(155, 114, 207, 0.1)', borderColor: 'rgba(155, 114, 207, 0.25)', color: 'var(--accent-purple)' }}>{tag}</span>
-                ))}
+            <Card3D maxTilt={10} depth={20} onClick={() => handleOptionClick('/input/conversation')}>
+              <div
+                className="glass-card"
+                style={{
+                  padding: 'clamp(22px, 5vw, 34px)', textAlign: 'left', position: 'relative', overflow: 'hidden', height: '100%',
+                  background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(255, 245, 250, 0.9))',
+                  border: '1px solid rgba(155, 114, 207, 0.22)',
+                  boxShadow: '0 12px 32px rgba(232, 99, 154, 0.12)'
+                }}
+              >
+                <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle, rgba(232, 99, 154, 0.18) 0%, transparent 70%)' }} />
+                <div style={{ fontSize: '2.4rem', marginBottom: 14 }} className="float-soft-3d">💬</div>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: 8, fontFamily: 'Playfair Display, serif', color: 'var(--text-primary)' }}>Chat with AI Doctor</h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: 1.55, marginBottom: 18 }}>
+                  Speak in natural conversation just like visiting your doctor. Share your health details, symptoms, and feelings comfortably.
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {['Friendly Chat', 'Doctor Tone', 'Comfortable'].map(tag => (
+                    <span key={tag} className="tag" style={{ background: 'rgba(155, 114, 207, 0.1)', borderColor: 'rgba(155, 114, 207, 0.25)', color: 'var(--accent-purple)' }}>{tag}</span>
+                  ))}
+                </div>
+                <div style={{ marginTop: 22 }}>
+                  <span className="btn-3d-push btn-primary" style={{ fontSize: '0.85rem', padding: '10px 18px', background: 'linear-gradient(135deg, #9b72cf, #e8639a)', width: '100%', justifyContent: 'center' }}>Start Chat →</span>
+                </div>
               </div>
-              <div style={{ marginTop: 20 }}>
-                <span className="btn-primary" style={{ fontSize: '0.85rem', padding: '9px 18px', background: 'linear-gradient(135deg, #9b72cf, #e8639a)', width: '100%', justifyContent: 'center' }}>Start Chat →</span>
-              </div>
-            </div>
+            </Card3D>
           </div>
 
           {/* Action buttons */}

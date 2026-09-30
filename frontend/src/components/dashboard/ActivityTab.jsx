@@ -3,6 +3,8 @@ import { useApp } from '../../context/AppContext';
 import { logActivity, getWeeklyActivities, getActivityHistory, getExercises } from '../../utils/api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import toast from 'react-hot-toast';
+import confetti from 'canvas-confetti';
+import Card3D from '../3d/Card3D';
 
 const INTENSITIES = ['low', 'moderate', 'high'];
 const INTENSITY_CONFIG = {
@@ -51,6 +53,12 @@ export default function ActivityTab() {
       setLoading(true);
       try {
         await logActivity(form);
+        confetti({
+          particleCount: 45,
+          spread: 60,
+          origin: { y: 0.65 },
+          colors: ['#3dbfa8', '#e6a830', '#e8639a', '#ffffff'],
+        });
         toast.success(form.is_rest_day ? '😌 Gentle rest day recorded! 🌸' : '💪 Activity recorded! Keep moving gently 🌸');
         setForm(f => ({ ...f, exercise_type: '', duration_minutes: '', steps: '', notes: '', is_rest_day: false }));
         await loadData();
@@ -73,7 +81,7 @@ export default function ActivityTab() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {/* Top Stats */}
+      {/* Top Stats with 3D Depth */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16 }}>
         {[
           { label: 'Active Duration', value: `${totalDuration}m`, color: '#e8639a', icon: '⏱️' },
@@ -81,11 +89,13 @@ export default function ActivityTab() {
           { label: 'Rest Days', value: restDays, color: '#9b72cf', icon: '😌' },
           { label: 'Active Days', value: weeklyPattern.filter(p => p.activity && !p.activity.is_rest_day).length, color: '#e6a830', icon: '🏃‍♀️' },
         ].map(s => (
-          <div key={s.label} className="glass-card" style={{ padding: 22, textAlign: 'center', background: 'rgba(255, 255, 255, 0.9)' }}>
-            <div style={{ fontSize: '1.6rem', marginBottom: 6 }}>{s.icon}</div>
-            <div style={{ fontSize: '1.65rem', fontWeight: 700, color: s.color, marginBottom: 4, fontFamily: 'Playfair Display, serif' }}>{s.value}</div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{s.label}</div>
-          </div>
+          <Card3D key={s.label} maxTilt={8} depth={14}>
+            <div className="glass-card" style={{ padding: 22, textAlign: 'center', background: 'rgba(255, 255, 255, 0.95)', height: '100%' }}>
+              <div style={{ fontSize: '1.6rem', marginBottom: 6 }} className="float-soft-3d">{s.icon}</div>
+              <div style={{ fontSize: '1.65rem', fontWeight: 800, color: s.color, marginBottom: 4, fontFamily: 'Playfair Display, serif' }}>{s.value}</div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{s.label}</div>
+            </div>
+          </Card3D>
         ))}
       </div>
 

@@ -5,6 +5,7 @@ import NutritionTab from '../components/dashboard/NutritionTab';
 import MedicationTab from '../components/dashboard/MedicationTab';
 import ActivityTab from '../components/dashboard/ActivityTab';
 import TrendsTab from '../components/dashboard/TrendsTab';
+import MaternalHeroCanvas from '../components/3d/MaternalHeroCanvas';
 
 const TABS = [
   { key: 'nutrition', label: 'Nutrition', shortLabel: 'Nutrition', icon: '🥗', color: 'rgba(61,191,168,0.12)', activeColor: '#3dbfa8' },
@@ -16,10 +17,15 @@ const TABS = [
 export default function DashboardPage() {
   const { tab: tabParam } = useParams();
   const navigate = useNavigate();
-  const { user, isLoggedIn, logout, setShowLoginModal, notifications, dismissNotification } = useApp();
+  const { user, healthProfile, isLoggedIn, logout, setShowLoginModal, notifications, dismissNotification } = useApp();
   const [activeTab, setActiveTab] = useState(tabParam || 'nutrition');
   const [showNotifPanel, setShowNotifPanel] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [show3DOrb, setShow3DOrb] = useState(false);
+
+  const currentWeek = healthProfile?.week_of_pregnancy || 24;
+  const currentTrimester = currentWeek <= 13 ? 1 : currentWeek <= 27 ? 2 : 3;
+  const daysUntilDue = Math.max(0, (40 - currentWeek) * 7);
 
   useEffect(() => {
     if (tabParam && TABS.find(t => t.key === tabParam)) setActiveTab(tabParam);
@@ -164,11 +170,33 @@ export default function DashboardPage() {
                 <span className="gradient-text">{currentTab?.label}</span>
               </h2>
               <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: 3 }}>
-                {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} • AI-Powered 3D Maternal Health Suite
               </p>
             </div>
 
             <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              {/* 3D Orb Toggle */}
+              <button
+                className="btn-3d-push"
+                onClick={() => setShow3DOrb(s => !s)}
+                style={{
+                  padding: '8px 14px',
+                  background: show3DOrb ? 'linear-gradient(135deg, #e8639a, #9b72cf)' : 'rgba(255, 255, 255, 0.9)',
+                  color: show3DOrb ? 'white' : 'var(--accent-rose)',
+                  border: '1px solid rgba(232, 99, 154, 0.3)',
+                  borderRadius: 12,
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(232, 99, 154, 0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <span>{show3DOrb ? '✕ Close 3D' : '🌐 3D Fetal Orb'}</span>
+              </button>
+
               {/* Notifications */}
               <div style={{ position: 'relative' }}>
                 <button className="btn-secondary" onClick={() => setShowNotifPanel(s => !s)} style={{ padding: '8px 14px', position: 'relative' }}>
@@ -210,6 +238,104 @@ export default function DashboardPage() {
                   🔐 Sign In to Save
                 </button>
               )}
+            </div>
+          </div>
+
+          {/* Interactive 3D Gestational Canvas Header (Expandable) */}
+          {show3DOrb && (
+            <div
+              className="glass-card"
+              style={{
+                marginBottom: 24,
+                padding: '20px 24px',
+                background: 'linear-gradient(135deg, rgba(255, 250, 253, 0.95), rgba(246, 240, 255, 0.95))',
+                border: '1px solid rgba(232, 99, 154, 0.25)',
+                boxShadow: '0 16px 48px rgba(155, 114, 207, 0.15)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 12,
+                position: 'relative',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.15rem', color: 'var(--text-primary)', fontFamily: 'Playfair Display, serif', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span>✨</span> Real-time 3D Maternal Gestational Environment
+                  </h3>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                    Interactive WebGL 3D simulation — click and drag with your mouse/finger to orbit
+                  </p>
+                </div>
+                <span style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: 12, background: 'rgba(232, 99, 154, 0.15)', color: 'var(--accent-rose)', fontWeight: 600 }}>
+                  Three.js WebGL 3D
+                </span>
+              </div>
+              <MaternalHeroCanvas height={260} interactive={true} />
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 20, fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                <span>💓 Pulsing Embryo Heart Core</span>
+                <span>🪐 Trimester Protection Torus</span>
+                <span>✨ Amniotic Stardust Field</span>
+              </div>
+            </div>
+          )}
+
+          {/* 3D Trimester Progress & Vitals Ribbon */}
+          <div
+            className="glass-card"
+            style={{
+              marginBottom: 26,
+              padding: '16px 20px',
+              background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(254, 243, 248, 0.9))',
+              border: '1px solid rgba(232, 99, 154, 0.18)',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: 16,
+              alignItems: 'center',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{
+                width: 48, height: 48, borderRadius: 16,
+                background: 'linear-gradient(135deg, #e8639a, #9b72cf)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '1.4rem', color: 'white',
+                boxShadow: '0 6px 18px rgba(232, 99, 154, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6)'
+              }}>
+                🤰
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>GESTATIONAL PROGRESS</div>
+                <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', fontFamily: 'Playfair Display, serif' }}>
+                  Week {currentWeek} • Trimester {currentTrimester}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                <span>Week 1</span>
+                <span style={{ fontWeight: 700, color: 'var(--accent-rose)' }}>{daysUntilDue} Days to Miracle</span>
+                <span>Week 40</span>
+              </div>
+              <div style={{ height: 8, borderRadius: 4, background: 'rgba(232, 99, 154, 0.15)', overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%',
+                  width: `${(currentWeek / 40) * 100}%`,
+                  borderRadius: 4,
+                  background: 'linear-gradient(90deg, #e8639a, #b48dd8, #3dbfa8)',
+                  boxShadow: '0 0 10px rgba(232, 99, 154, 0.5)',
+                  transition: 'width 1s ease-in-out'
+                }} />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              <span style={{ padding: '6px 12px', borderRadius: 10, background: 'rgba(61, 191, 168, 0.12)', color: '#2aaa8f', fontSize: '0.78rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span>👶</span> Corn (~30cm)
+              </span>
+              <span style={{ padding: '6px 12px', borderRadius: 10, background: 'rgba(155, 114, 207, 0.12)', color: '#9b72cf', fontSize: '0.78rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span>💓</span> 142 BPM
+              </span>
             </div>
           </div>
 

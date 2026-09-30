@@ -3,6 +3,8 @@ import { useApp } from '../../context/AppContext';
 import { getMedications, addMedication, deleteMedication, logMedication, getMedicationLogs, getMedicationAdherence, getTodaySchedule } from '../../utils/api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import toast from 'react-hot-toast';
+import confetti from 'canvas-confetti';
+import Card3D from '../3d/Card3D';
 
 const FREQUENCIES = ['Once daily', 'Twice daily', 'Three times daily', 'Four times daily', 'Weekly', 'As needed'];
 const DEFAULT_TIMES = {
@@ -74,7 +76,17 @@ export default function MedicationTab() {
       try {
         const today = new Date().toISOString().split('T')[0];
         await logMedication({ medication_id: medId, scheduled_time: scheduledTime, actual_time: status === 'taken' ? new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : null, status, log_date: today });
-        toast.success(status === 'taken' ? '✅ Marked as Taken' : '❌ Marked as Missed');
+        if (status === 'taken') {
+          confetti({
+            particleCount: 50,
+            spread: 65,
+            origin: { y: 0.65 },
+            colors: ['#e8639a', '#9b72cf', '#3dbfa8', '#ffd166'],
+          });
+          toast.success('🎉 Medication Taken! Consistency protects you & your baby 🌸');
+        } else {
+          toast.success('❌ Marked as Missed');
+        }
         await loadData();
       } catch { toast.error('Failed to log medication'); }
     });
@@ -168,46 +180,57 @@ export default function MedicationTab() {
               <button className="btn-primary" onClick={() => setView('add')}>➕ Add Medication</button>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
               {todaySchedule.map(med => (
-                <div key={med.id} className="glass-card" style={{ padding: 22, background: 'rgba(255, 255, 255, 0.9)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-                    <div>
-                      <h4 style={{ fontSize: '1.1rem', color: 'var(--text-primary)', marginBottom: 6 }}>💊 {med.name}</h4>
-                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                        <span className="tag">💉 Dosage: {med.dosage}</span>
-                        <span className="tag" style={{ background: 'rgba(230,168,48,0.1)', borderColor: 'rgba(230,168,48,0.25)', color: '#c47d10' }}>🔄 {med.frequency}</span>
-                      </div>
-                    </div>
-                    <button onClick={() => handleDelete(med.id, med.name)} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.76rem', color: '#c94060', borderColor: 'rgba(242,95,122,0.3)' }}>Remove</button>
-                  </div>
-
-                  {/* Time slots */}
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-                    {(med.logs || []).map((log, i) => {
-                      const statusConfig = {
-                        taken: { color: '#2aaa8f', bg: 'rgba(61,191,168,0.12)', border: 'rgba(61,191,168,0.3)', label: '✅ Taken' },
-                        missed: { color: '#c94060', bg: 'rgba(242,95,122,0.1)', border: 'rgba(242,95,122,0.3)', label: '❌ Missed' },
-                        pending: { color: '#c47d10', bg: 'rgba(230,168,48,0.12)', border: 'rgba(230,168,48,0.3)', label: '⏰ Due' },
-                      }[log.status] || {};
-
-                      return (
-                        <div key={i} style={{ flex: '1 1 150px', padding: 14, borderRadius: 12, background: statusConfig.bg, border: `1px solid ${statusConfig.border}`, textAlign: 'center' }}>
-                          <div style={{ fontSize: '1.05rem', fontWeight: 700, color: statusConfig.color, marginBottom: 4 }}>{log.time}</div>
-                          <div style={{ fontSize: '0.78rem', color: statusConfig.color, marginBottom: 10, fontWeight: 600 }}>{statusConfig.label}</div>
-                          {log.status === 'pending' && (
-                            <div style={{ display: 'flex', gap: 6 }}>
-                              <button onClick={() => handleMarkStatus(med.id, log.time, 'taken')} className="btn-success" style={{ flex: 1, padding: '6px 8px', fontSize: '0.75rem' }}>✓ Taken</button>
-                              <button onClick={() => handleMarkStatus(med.id, log.time, 'missed')} className="btn-danger" style={{ flex: 1, padding: '6px 8px', fontSize: '0.75rem' }}>✗ Skip</button>
-                            </div>
-                          )}
+                <Card3D key={med.id} maxTilt={5} depth={10}>
+                  <div className="glass-card" style={{ padding: 22, background: 'rgba(255, 255, 255, 0.95)', border: '1px solid rgba(232, 99, 154, 0.2)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                        {/* 3D Realistic Pill Graphic */}
+                        <div className="pill-capsule-3d">
+                          <div className="capsule-half-left" />
+                          <div className="capsule-half-right" />
                         </div>
-                      );
-                    })}
-                  </div>
+                        <div>
+                          <h4 style={{ fontSize: '1.15rem', color: 'var(--text-primary)', marginBottom: 4, fontFamily: 'Playfair Display, serif' }}>
+                            {med.name}
+                          </h4>
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                            <span className="tag">💉 Dosage: {med.dosage}</span>
+                            <span className="tag" style={{ background: 'rgba(230,168,48,0.1)', borderColor: 'rgba(230,168,48,0.25)', color: '#c47d10' }}>🔄 {med.frequency}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <button onClick={() => handleDelete(med.id, med.name)} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.76rem', color: '#c94060', borderColor: 'rgba(242,95,122,0.3)' }}>Remove</button>
+                    </div>
 
-                  {med.notes && <div style={{ marginTop: 14, fontSize: '0.84rem', color: 'var(--text-secondary)' }}>📝 Note: {med.notes}</div>}
-                </div>
+                    {/* Time slots with 3D tactile buttons */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                      {(med.logs || []).map((log, i) => {
+                        const statusConfig = {
+                          taken: { color: '#2aaa8f', bg: 'rgba(61,191,168,0.12)', border: 'rgba(61,191,168,0.35)', label: '✅ Taken' },
+                          missed: { color: '#c94060', bg: 'rgba(242,95,122,0.1)', border: 'rgba(242,95,122,0.35)', label: '❌ Missed' },
+                          pending: { color: '#c47d10', bg: 'rgba(230,168,48,0.12)', border: 'rgba(230,168,48,0.35)', label: '⏰ Due Now' },
+                        }[log.status] || {};
+
+                        return (
+                          <div key={i} style={{ flex: '1 1 150px', padding: 14, borderRadius: 14, background: statusConfig.bg, border: `1px solid ${statusConfig.border}`, textAlign: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 800, color: statusConfig.color, marginBottom: 2 }}>{log.time}</div>
+                            <div style={{ fontSize: '0.78rem', color: statusConfig.color, marginBottom: 10, fontWeight: 700 }}>{statusConfig.label}</div>
+                            {log.status === 'pending' && (
+                              <div style={{ display: 'flex', gap: 8 }}>
+                                <button onClick={() => handleMarkStatus(med.id, log.time, 'taken')} className="btn-3d-push btn-success" style={{ flex: 1, padding: '7px 10px', fontSize: '0.78rem', borderRadius: 10 }}>✓ Taken</button>
+                                <button onClick={() => handleMarkStatus(med.id, log.time, 'missed')} className="btn-3d-push btn-danger" style={{ flex: 1, padding: '7px 10px', fontSize: '0.78rem', borderRadius: 10 }}>✗ Skip</button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {med.notes && <div style={{ marginTop: 14, fontSize: '0.84rem', color: 'var(--text-secondary)' }}>📝 Note: {med.notes}</div>}
+                  </div>
+                </Card3D>
               ))}
             </div>
           )}

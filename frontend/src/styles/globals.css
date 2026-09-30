@@ -841,3 +841,105 @@ h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
   font-size: 0.82rem;
   color: #c94060;
 }
+
+/* ===================== 3D REALISM & TACTILE DEPTH ===================== */
+.card-3d-wrapper {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+/* Tactile 3D Buttons with realistic depression */
+.btn-3d-push {
+  position: relative;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
+  user-select: none;
+}
+
+.btn-3d-push:hover {
+  transform: translateY(-2px) translateZ(8px);
+  filter: brightness(1.04);
+}
+
+.btn-3d-push:active {
+  transform: translateY(2px) translateZ(0);
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.2) !important;
+  filter: brightness(0.97);
+}
+
+/* Realistic 3D Pill Capsule */
+.pill-capsule-3d {
+  width: 52px;
+  height: 24px;
+  border-radius: 12px;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.14),
+    inset 0 2px 3px rgba(255, 255, 255, 0.8),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.2);
+  transform: rotate(-15deg);
+  transition: transform 0.25s ease;
+}
+
+.pill-capsule-3d:hover {
+  transform: rotate(0deg) scale(1.1);
+}
+
+.pill-capsule-3d .capsule-half-left {
+  flex: 1;
+  background: linear-gradient(135deg, #e8639a, #d94f7e);
+  position: relative;
+}
+
+.pill-capsule-3d .capsule-half-right {
+  flex: 1;
+  background: linear-gradient(135deg, #ffffff, #f0e6f5);
+  position: relative;
+}
+
+.pill-capsule-3d::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 6px;
+  right: 6px;
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(to right, rgba(255,255,255,0.8), rgba(255,255,255,0.2));
+  pointer-events: none;
+}
+
+/* 3D Gauge & Radial Progress */
+.gauge-ring-3d {
+  filter: drop-shadow(0 4px 12px rgba(232, 99, 154, 0.2));
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Animations */
+@keyframes floatBubble {
+  0% { transform: translateY(0) scale(0.8); opacity: 0; }
+  50% { opacity: 0.8; }
+  100% { transform: translateY(-40px) scale(1.2); opacity: 0; }
+}
+
+@keyframes ekgMove {
+  from { stroke-dashoffset: 500; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.6; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+@keyframes floatSoft3D {
+  0%, 100% { transform: translateY(0px) rotateX(0deg); }
+  50% { transform: translateY(-8px) rotateX(4deg); }
+}
+
+.float-soft-3d {
+  animation: floatSoft3D 4s ease-in-out infinite;
+}
+

@@ -3,6 +3,8 @@ import { useApp } from '../../context/AppContext';
 import { addTrend, getTrends } from '../../utils/api';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, AreaChart, Area } from 'recharts';
 import toast from 'react-hot-toast';
+import Card3D from '../3d/Card3D';
+import FetalHeartbeatCard from '../3d/FetalHeartbeatCard';
 
 const MOODS = [
   { label: 'Happy & Calm', icon: '🌸', value: 'great', color: '#2aaa8f', bg: 'rgba(61,191,168,0.12)' },
@@ -82,6 +84,11 @@ export default function TrendsTab() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* 3D Fetal Heartbeat & Kick Doppler Suite */}
+      <Card3D maxTilt={4} depth={10}>
+        <FetalHeartbeatCard week={healthProfile?.week_of_pregnancy || latest?.week_of_pregnancy || 24} />
+      </Card3D>
+
       {/* Latest Vitals Snapshot */}
       {latest && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 16 }}>
@@ -96,12 +103,14 @@ export default function TrendsTab() {
             { label: 'Heart Rate', value: `${latest.heart_rate || '—'} bpm`, icon: '❤️', color: '#c94060' },
             { label: 'Pregnancy Week', value: `Week ${latest.week_of_pregnancy || healthProfile?.week_of_pregnancy || '—'}`, icon: '🤰', color: '#2aaa8f' },
           ].map(s => (
-            <div key={s.label} className="glass-card" style={{ padding: 22, textAlign: 'center', background: 'rgba(255, 255, 255, 0.9)' }}>
-              <div style={{ fontSize: '1.6rem', marginBottom: 6 }}>{s.icon}</div>
-              <div style={{ fontSize: '1.45rem', fontWeight: 700, color: s.color, marginBottom: 4, fontFamily: 'Playfair Display, serif' }}>{s.value}</div>
-              {s.sub && <div style={{ fontSize: '0.74rem', color: s.subColor, marginBottom: 2, fontWeight: 600 }}>{s.sub} vs last check</div>}
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{s.label}</div>
-            </div>
+            <Card3D key={s.label} maxTilt={8} depth={14}>
+              <div className="glass-card" style={{ padding: 22, textAlign: 'center', background: 'rgba(255, 255, 255, 0.95)', height: '100%' }}>
+                <div style={{ fontSize: '1.6rem', marginBottom: 6 }} className="float-soft-3d">{s.icon}</div>
+                <div style={{ fontSize: '1.45rem', fontWeight: 700, color: s.color, marginBottom: 4, fontFamily: 'Playfair Display, serif' }}>{s.value}</div>
+                {s.sub && <div style={{ fontSize: '0.74rem', color: s.subColor, marginBottom: 2, fontWeight: 600 }}>{s.sub} vs last check</div>}
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{s.label}</div>
+              </div>
+            </Card3D>
           ))}
         </div>
       )}

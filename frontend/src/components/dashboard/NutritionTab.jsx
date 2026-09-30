@@ -3,6 +3,8 @@ import { useApp } from '../../context/AppContext';
 import { getHealthProfile, analyzeMeal, saveMealLog, getWeeklyMeals, getTodayMeal } from '../../utils/api';
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import toast from 'react-hot-toast';
+import Card3D from '../3d/Card3D';
+import HydrationTumbler3D from '../3d/HydrationTumbler3D';
 
 const STATUS_CONFIG = {
   normal: { label: 'Normal', color: '#2aaa8f', bg: 'rgba(61,191,168,0.12)', icon: '✓' },
@@ -133,10 +135,47 @@ export default function NutritionTab() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+      {/* 3D Macro Quick Gauge Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 16 }}>
+        {[
+          { label: 'Daily Energy', value: '2,200', unit: 'kcal', icon: '⚡', color: '#e6a830', percent: 85 },
+          { label: 'Maternal Protein', value: '75', unit: 'g', icon: '🥚', color: '#e8639a', percent: 90 },
+          { label: 'Elemental Iron', value: '27', unit: 'mg', icon: '🩸', color: '#9b72cf', percent: 80 },
+          { label: 'Calcium Support', value: '1,000', unit: 'mg', icon: '🦴', color: '#3dbfa8', percent: 95 },
+        ].map((macro) => (
+          <Card3D key={macro.label} maxTilt={8} depth={15}>
+            <div
+              className="glass-card"
+              style={{
+                padding: '18px 16px',
+                textAlign: 'center',
+                background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(254, 245, 250, 0.9))',
+                border: '1px solid rgba(232, 99, 154, 0.16)',
+                boxShadow: '0 8px 24px rgba(155, 114, 207, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <div style={{ fontSize: '1.6rem', marginBottom: 4 }} className="float-soft-3d">{macro.icon}</div>
+              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: macro.color, fontFamily: 'Playfair Display, serif' }}>
+                {macro.value} <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>{macro.unit}</span>
+              </div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: 2, fontWeight: 500 }}>{macro.label}</div>
+              <div style={{ width: '80%', height: 4, borderRadius: 2, background: 'rgba(0,0,0,0.06)', marginTop: 8, overflow: 'hidden' }}>
+                <div style={{ width: `${macro.percent}%`, height: '100%', background: macro.color, borderRadius: 2 }} />
+              </div>
+            </div>
+          </Card3D>
+        ))}
+      </div>
+
       {/* SECTION 1: Nutrient Suggestion Tabular Chart (TOP) */}
       <section>
-        <h3 className="section-heading" style={{ color: 'var(--text-primary)', fontSize: '1.2rem' }}>
-          <span>🎯</span> Daily Nutrient Requirements
+        <h3 className="section-heading" style={{ color: 'var(--text-primary)', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span>🎯</span> Daily Nutrient Requirements & 3D Health Blueprint
         </h3>
         {!nutrients ? (
           <div className="glass-card" style={{ padding: 36, textAlign: 'center', background: 'rgba(255, 255, 255, 0.9)' }}>
@@ -146,133 +185,154 @@ export default function NutritionTab() {
             <a href="/input/precise" className="btn-primary" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>📋 Fill Health Profile</a>
           </div>
         ) : (
-          <div className="glass-card" style={{ overflow: 'hidden', background: 'rgba(255, 255, 255, 0.9)' }}>
-            {/* Summary banner */}
-            {analysis?.summary && (
-              <div style={{ padding: '16px 22px', background: 'rgba(61,191,168,0.09)', borderBottom: '1px solid rgba(61,191,168,0.2)', fontSize: '0.9rem', color: '#2aaa8f', lineHeight: 1.6, fontWeight: 500 }}>
-                ✨ {analysis.summary}
+          <Card3D maxTilt={4} depth={10}>
+            <div className="glass-card" style={{ overflow: 'hidden', background: 'rgba(255, 255, 255, 0.95)', border: '1px solid rgba(232, 99, 154, 0.2)' }}>
+              {/* Summary banner */}
+              {analysis?.summary && (
+                <div style={{ padding: '16px 22px', background: 'linear-gradient(90deg, rgba(61,191,168,0.12), rgba(155,114,207,0.08))', borderBottom: '1px solid rgba(61,191,168,0.2)', fontSize: '0.9rem', color: '#2aaa8f', lineHeight: 1.6, fontWeight: 600 }}>
+                  ✨ {analysis.summary}
+                </div>
+              )}
+              {/* Warnings */}
+              {analysis?.warnings?.length > 0 && (
+                <div style={{ padding: '12px 22px', background: 'rgba(242,95,122,0.08)', borderBottom: '1px solid rgba(242,95,122,0.2)' }}>
+                  {analysis.warnings.map((w, i) => (
+                    <div key={i} style={{ fontSize: '0.85rem', color: '#c94060', display: 'flex', alignItems: 'center', gap: 8, fontWeight: 500 }}>⚠️ {w}</div>
+                  ))}
+                </div>
+              )}
+              <div style={{ overflowX: 'auto' }}>
+                <table className="glass-table">
+                  <thead>
+                    <tr>
+                      <th>Nutrient</th>
+                      <th>Daily Requirement</th>
+                      <th>Status</th>
+                      <th>Optimal Range</th>
+                      <th>Guidance & Purpose</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getNutrientRows().map((row, i) => {
+                      const sc = STATUS_CONFIG[row.status] || STATUS_CONFIG.normal;
+                      const pct = row.status === 'normal' ? 75 : row.status === 'low' || row.status === 'deficient' ? 40 : 95;
+                      const barColor = sc.color;
+                      return (
+                        <tr key={i}>
+                          <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{row.nutrient}</td>
+                          <td>
+                            <span style={{ color: 'var(--accent-purple)', fontWeight: 700, fontSize: '0.92rem' }}>{row.daily}</span>
+                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}> {row.unit}</span>
+                          </td>
+                          <td>
+                            <span className="status-badge" style={{ background: sc.bg, color: sc.color, border: `1px solid ${sc.color}45` }}>
+                              {sc.icon} {sc.label}
+                            </span>
+                          </td>
+                          <td style={{ width: 130 }}>
+                            <div className="progress-bar" style={{ width: 110, background: 'rgba(155, 114, 207, 0.12)' }}>
+                              <div className="progress-fill" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${barColor}99, ${barColor})` }} />
+                            </div>
+                          </td>
+                          <td style={{ fontSize: '0.82rem', maxWidth: 240, color: 'var(--text-secondary)', lineHeight: 1.4 }}>{row.note}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
-            )}
-            {/* Warnings */}
-            {analysis?.warnings?.length > 0 && (
-              <div style={{ padding: '12px 22px', background: 'rgba(242,95,122,0.08)', borderBottom: '1px solid rgba(242,95,122,0.2)' }}>
-                {analysis.warnings.map((w, i) => (
-                  <div key={i} style={{ fontSize: '0.85rem', color: '#c94060', display: 'flex', alignItems: 'center', gap: 8, fontWeight: 500 }}>⚠️ {w}</div>
-                ))}
-              </div>
-            )}
-            <div style={{ overflowX: 'auto' }}>
-              <table className="glass-table">
-                <thead>
-                  <tr>
-                    <th>Nutrient</th>
-                    <th>Daily Requirement</th>
-                    <th>Status</th>
-                    <th>Optimal Range</th>
-                    <th>Guidance & Purpose</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {getNutrientRows().map((row, i) => {
-                    const sc = STATUS_CONFIG[row.status] || STATUS_CONFIG.normal;
-                    const pct = row.status === 'normal' ? 75 : row.status === 'low' || row.status === 'deficient' ? 40 : 95;
-                    const barColor = sc.color;
-                    return (
-                      <tr key={i}>
-                        <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{row.nutrient}</td>
-                        <td>
-                          <span style={{ color: 'var(--accent-purple)', fontWeight: 700, fontSize: '0.92rem' }}>{row.daily}</span>
-                          <span style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}> {row.unit}</span>
-                        </td>
-                        <td>
-                          <span className="status-badge" style={{ background: sc.bg, color: sc.color, border: `1px solid ${sc.color}45` }}>
-                            {sc.icon} {sc.label}
-                          </span>
-                        </td>
-                        <td style={{ width: 130 }}>
-                          <div className="progress-bar" style={{ width: 110, background: 'rgba(155, 114, 207, 0.12)' }}>
-                            <div className="progress-fill" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${barColor}99, ${barColor})` }} />
-                          </div>
-                        </td>
-                        <td style={{ fontSize: '0.82rem', maxWidth: 240, color: 'var(--text-secondary)', lineHeight: 1.4 }}>{row.note}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
             </div>
-          </div>
+          </Card3D>
         )}
       </section>
 
       {/* SECTION 2: Meals & Hydration Part (BELOW Tabular Chart) */}
       <section>
-        <h3 className="section-heading" style={{ color: 'var(--text-primary)', fontSize: '1.2rem' }}>
-          <span>🍽️</span> Meals & Hydration Log
+        <h3 className="section-heading" style={{ color: 'var(--text-primary)', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span>🍽️</span> Meals & 3D Interactive Hydration Suite
         </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(310px, 1fr))', gap: 24 }}>
           {/* Meal Input Form */}
-          <div className="glass-card" style={{ padding: 26, background: 'rgba(255, 255, 255, 0.9)' }}>
-            <h4 style={{ marginBottom: 18, fontSize: '1.05rem', color: 'var(--accent-rose)' }}>📝 Log What You Ate Today</h4>
-            {[
-              { key: 'breakfast', label: '🌅 Breakfast', placeholder: 'e.g. 2 whole grain rotis, dal, mixed nuts' },
-              { key: 'lunch', label: '☀️ Lunch', placeholder: 'e.g. brown rice, palak paneer, curd, cucumber salad' },
-              { key: 'dinner', label: '🌙 Dinner', placeholder: 'e.g. vegetable soup, 2 soft rotis, lentils' },
-              { key: 'snacks', label: '🍎 Snacks', placeholder: 'e.g. almonds, walnuts, seasonal fruits, coconut water' },
-            ].map(({ key, label, placeholder }) => (
-              <div key={key} style={{ marginBottom: 14 }}>
-                <label className="form-label">{label}</label>
-                <input name={key} value={mealForm[key]} onChange={handleMealChange} className="neuro-input" placeholder={placeholder} />
+          <Card3D maxTilt={6} depth={12}>
+            <div className="glass-card" style={{ padding: 26, background: 'rgba(255, 255, 255, 0.95)', height: '100%' }}>
+              <h4 style={{ marginBottom: 18, fontSize: '1.05rem', color: 'var(--accent-rose)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>📝</span> Log What You Ate Today
+              </h4>
+              {[
+                { key: 'breakfast', label: '🌅 Breakfast', placeholder: 'e.g. 2 whole grain rotis, dal, mixed nuts' },
+                { key: 'lunch', label: '☀️ Lunch', placeholder: 'e.g. brown rice, palak paneer, curd, cucumber salad' },
+                { key: 'dinner', label: '🌙 Dinner', placeholder: 'e.g. vegetable soup, 2 soft rotis, lentils' },
+                { key: 'snacks', label: '🍎 Snacks', placeholder: 'e.g. almonds, walnuts, seasonal fruits, coconut water' },
+              ].map(({ key, label, placeholder }) => (
+                <div key={key} style={{ marginBottom: 14 }}>
+                  <label className="form-label">{label}</label>
+                  <input name={key} value={mealForm[key]} onChange={handleMealChange} className="neuro-input" placeholder={placeholder} />
+                </div>
+              ))}
+              <div style={{ marginBottom: 22 }}>
+                <label className="form-label">💧 Water Consumption (ml)</label>
+                <input name="water_ml" type="number" value={mealForm.water_ml} onChange={handleMealChange} className="neuro-input" placeholder="e.g. 2200 (Aim for 2500 ml)" min="0" max="5000" />
               </div>
-            ))}
-            <div style={{ marginBottom: 22 }}>
-              <label className="form-label">💧 Water Consumption (ml)</label>
-              <input name="water_ml" type="number" value={mealForm.water_ml} onChange={handleMealChange} className="neuro-input" placeholder="e.g. 2200 (Aim for 2500 ml)" min="0" max="5000" />
+              <button className="btn-3d-push btn-primary" onClick={handleMealAnalyze} disabled={analyzingMeal} style={{ width: '100%', justifyContent: 'center', padding: '12px' }}>
+                {analyzingMeal ? <><span className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }}></span> Analyzing Nutrients...</> : '🔍 Compare & Save Meal'}
+              </button>
             </div>
-            <button className="btn-primary" onClick={handleMealAnalyze} disabled={analyzingMeal} style={{ width: '100%', justifyContent: 'center', padding: '12px' }}>
-              {analyzingMeal ? <><span className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }}></span> Analyzing Nutrients...</> : '🔍 Compare & Save Meal'}
-            </button>
-          </div>
+          </Card3D>
 
           {/* Meal Analysis Result */}
-          <div className="glass-card" style={{ padding: 26, background: 'rgba(255, 255, 255, 0.9)' }}>
-            <h4 style={{ marginBottom: 18, fontSize: '1.05rem', color: 'var(--accent-rose)' }}>📊 Daily Comparison Result</h4>
-            {!mealAnalysis ? (
-              <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--text-secondary)' }}>
-                <div style={{ fontSize: '3rem', marginBottom: 14 }}>🥗</div>
-                <p style={{ fontSize: '0.92rem', lineHeight: 1.6 }}>Enter your meals on the left to see instant comparison for Carbohydrates, Fats, Proteins, Iron, Fiber, Calcium, and Water.</p>
-              </div>
-            ) : (
-              <>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 18 }}>
-                  {getMealStatusRows().map((row, i) => {
-                    const sc = STATUS_CONFIG[row.status] || STATUS_CONFIG.normal;
-                    const pct = row.required > 0 ? Math.min((row.consumed / row.required) * 100, 100) : 50;
-                    return (
-                      <div key={i}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: '0.85rem' }}>
-                          <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{row.nutrient}</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ color: sc.color, fontWeight: 600 }}>{row.consumed}{row.unit}</span>
-                            <span style={{ color: 'var(--text-muted)' }}>/ {row.required}{row.unit}</span>
-                            <span className="status-badge" style={{ background: sc.bg, color: sc.color, border: `1px solid ${sc.color}45`, padding: '2px 9px' }}>{sc.label}</span>
+          <Card3D maxTilt={6} depth={12}>
+            <div className="glass-card" style={{ padding: 26, background: 'rgba(255, 255, 255, 0.95)', height: '100%' }}>
+              <h4 style={{ marginBottom: 18, fontSize: '1.05rem', color: 'var(--accent-rose)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>📊</span> Daily Comparison Result
+              </h4>
+              {!mealAnalysis ? (
+                <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--text-secondary)' }}>
+                  <div style={{ fontSize: '3rem', marginBottom: 14 }} className="float-anim">🥗</div>
+                  <p style={{ fontSize: '0.92rem', lineHeight: 1.6 }}>Enter your meals on the left to see instant comparison for Carbohydrates, Fats, Proteins, Iron, Fiber, Calcium, and Water.</p>
+                </div>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 18 }}>
+                    {getMealStatusRows().map((row, i) => {
+                      const sc = STATUS_CONFIG[row.status] || STATUS_CONFIG.normal;
+                      const pct = row.required > 0 ? Math.min((row.consumed / row.required) * 100, 100) : 50;
+                      return (
+                        <div key={i}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: '0.85rem' }}>
+                            <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{row.nutrient}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ color: sc.color, fontWeight: 600 }}>{row.consumed}{row.unit}</span>
+                              <span style={{ color: 'var(--text-muted)' }}>/ {row.required}{row.unit}</span>
+                              <span className="status-badge" style={{ background: sc.bg, color: sc.color, border: `1px solid ${sc.color}45`, padding: '2px 9px' }}>{sc.label}</span>
+                            </div>
+                          </div>
+                          <div className="progress-bar" style={{ height: 7, background: 'rgba(155, 114, 207, 0.12)' }}>
+                            <div className="progress-fill" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${sc.color}90, ${sc.color})` }} />
                           </div>
                         </div>
-                        <div className="progress-bar" style={{ height: 7, background: 'rgba(155, 114, 207, 0.12)' }}>
-                          <div className="progress-fill" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${sc.color}90, ${sc.color})` }} />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                {mealAnalysis.notes && (
-                  <div style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(155, 114, 207, 0.08)', border: '1px solid rgba(155, 114, 207, 0.2)', fontSize: '0.84rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                    💡 {mealAnalysis.notes}
+                      );
+                    })}
                   </div>
-                )}
-              </>
-            )}
-          </div>
+                  {mealAnalysis.notes && (
+                    <div style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(155, 114, 207, 0.08)', border: '1px solid rgba(155, 114, 207, 0.2)', fontSize: '0.84rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                      💡 {mealAnalysis.notes}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </Card3D>
+
+          {/* 3D Realistic Hydration Tumbler Widget */}
+          <Card3D maxTilt={6} depth={12}>
+            <HydrationTumbler3D
+              currentMl={Number(mealForm.water_ml) || todayLog?.water_ml || 1750}
+              targetMl={2500}
+              onAddWater={(ml) => {
+                setMealForm(f => ({ ...f, water_ml: (Number(f.water_ml) || 0) + ml }));
+              }}
+            />
+          </Card3D>
         </div>
       </section>
 
